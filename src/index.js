@@ -45,6 +45,7 @@ const resumeRoutes = require("./routes/StudentResumeRoutes");
 const alumniAuthRoutes = require("./routes/AlumniAuthRoutes");
 const alumniProfileRoutes = require("./routes/AlumniProfileRoutes");
 const opportunityRoutes = require("./routes/OpportunityRoutes");
+const applicationRoutes = require("./routes/ApplicationRoutes");
 
 // Health check endpoint
 app.get("/", (req, res) => {
@@ -62,6 +63,7 @@ app.use("/api/v1/student", resumeRoutes);
 app.use("/api/v1/alumni", alumniAuthRoutes);
 app.use("/api/v1/alumni", alumniProfileRoutes);
 app.use("/api/v1", opportunityRoutes);
+app.use("/api/v1", applicationRoutes);
 
 
 
