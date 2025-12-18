@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt")
 const Student = require("../models/StudentModel")
+const College = require("../models/CollegeModel")
 const jwt = require("jsonwebtoken")
 const {handleAuthSuccess} = require('../utils/tokenGenerator');
 require("dotenv").config()
@@ -19,6 +20,24 @@ function validateEmail(email, res) {
     return true;
 }
 
+// Helper function to calculate profile completeness
+function calculateProfileCompleteness(student) {
+    let score = 0;
+    const fields = [
+        { field: student.firstName, weight: 15 },
+        { field: student.lastName, weight: 15 },
+        { field: student.email, weight: 15 },
+        { field: student.image, weight: 10 },
+        { field: student.college, weight: 45 },
+    ];
+
+    fields.forEach(({ field, weight }) => {
+        if (field) score += weight;
+    });
+
+    return score;
+}
+
 exports.signup = async (req, res) => {
   try {
     // Destructure fields from the request body
@@ -28,13 +47,15 @@ exports.signup = async (req, res) => {
       email,
       password,
       accountType,
+      collegeName,
     } = req.body
     // Check if All Details are there or not
     if (
       !firstName ||
       !lastName ||
       !email ||
-      !password
+      !password ||
+      !collegeName
     ) {
       return res.status(403).send({
         success: false,
@@ -55,6 +76,21 @@ exports.signup = async (req, res) => {
       })
     }
 
+    // Remove spaces from college name to create matchingName
+    const matchingName = collegeName.replace(/\s+/g, '').toLowerCase();
+
+    // Check if college exists with matching name
+    let college = await College.findOne({ matchingName });
+
+    // If college doesn't exist, create it
+    if (!college) {
+      college = await College.create({
+        name: collegeName,
+        matchingName: matchingName,
+        Student: [],
+        Alumni: [],
+      });
+    }
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -67,7 +103,19 @@ exports.signup = async (req, res) => {
       password: hashedPassword,
       accountType: accountType || "Student",
       image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName}%20${lastName}`,
+      college: college._id,
     })
+
+    // Calculate profile completeness
+    student.profileCompleteness = calculateProfileCompleteness(student);
+    await student.save();
+
+    // Add student to college's student array
+    college.Student.push(student._id);
+    await college.save();
+
+    // Populate college details before sending response
+    await student.populate('college', 'name matchingName');
 
     // token generation, user object transformation, and response
     handleAuthSuccess(student, res, "student registered successfully");
@@ -138,8 +186,10 @@ exports.getStudentData = async (req, res) => {
     // Get student ID from authenticated user (set by auth middleware)
     const studentId = req.user.id;
 
-    // Find student by ID and exclude password
-    const student = await Student.findById(studentId).select("-password");
+    // Find student by ID and exclude password, populate college
+    const student = await Student.findById(studentId)
+      .select("-password")
+      .populate('college', 'name matchingName');
 
     // If student not found
     if (!student) {
@@ -149,10 +199,13 @@ exports.getStudentData = async (req, res) => {
       });
     }
 
-    // Return student data
+    // Return student data with profile completeness
     return res.status(200).json({
       success: true,
-      data: student,
+      data: {
+        ...student.toObject(),
+        profileCompleteness: student.profileCompleteness || 0,
+      },
       message: "Student data fetched successfully",
     });
 
