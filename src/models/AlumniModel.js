@@ -41,6 +41,31 @@ const AlumniSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
+    college: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "College",
+        required: true,
+    },
+    company: {
+        type: String,
+        trim: true,
+    },
+    jobTitle: {
+        type: String,
+        trim: true,
+    },
+    yearsOfExperience: {
+        type: Number,
+        min: 0,
+    },
+    skills: [{
+        type: String,
+        trim: true,
+    }],
+    referralPreferences: {
+        type: String,
+        trim: true,
+    },
 }, { timestamps: true }
 )   
 module.exports = mongoose.model("Alumni", AlumniSchema)

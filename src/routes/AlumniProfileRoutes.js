@@ -2,19 +2,25 @@ const express = require("express");
 const router = express.Router();
 
 // Import controllers
-const { signup, login, getStudentData } = require("../controllers/StudentAuth");
+const {
+    updateProfile,
+    getProfile,
+} = require("../controllers/AlumniProfile");
 
 // Import middleware
 const { auth } = require("../middlewares/auth");
 
 // ********************************************************************************************************
-//                                      Authentication routes
+//                                      Alumni Profile routes
 // ********************************************************************************************************
 
-// Route for user signup
-router.post("/signup", signup);
+// All routes require authentication
+router.use(auth);
 
-// Route for user login
-router.post("/login", login);
+// Create / Update Profile
+router.put("/profile", updateProfile);
+
+// Get Own Profile
+router.get("/profile", getProfile);
 
 module.exports = router;

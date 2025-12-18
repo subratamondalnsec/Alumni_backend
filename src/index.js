@@ -39,9 +39,11 @@ app.use(
 );
 
 // Setting up routes
-const authRoutes = require("./routes/StudentAuthRoutes");
+const studentAuthRoutes = require("./routes/StudentAuthRoutes");
 const profileRoutes = require("./routes/StudentProfileRoutes");
 const resumeRoutes = require("./routes/StudentResumeRoutes");
+const alumniAuthRoutes = require("./routes/AlumniAuthRoutes");
+const alumniProfileRoutes = require("./routes/AlumniProfileRoutes");
 
 // Health check endpoint
 app.get("/", (req, res) => {
@@ -53,9 +55,11 @@ app.get("/", (req, res) => {
 });
 
 // Mount routes
-app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/student", studentAuthRoutes);
 app.use("/api/v1/student", profileRoutes);
 app.use("/api/v1/student", resumeRoutes);
+app.use("/api/v1/alumni", alumniAuthRoutes);
+app.use("/api/v1/alumni", alumniProfileRoutes);
 
 
 

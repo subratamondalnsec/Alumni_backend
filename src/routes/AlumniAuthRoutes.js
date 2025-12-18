@@ -2,19 +2,20 @@ const express = require("express");
 const router = express.Router();
 
 // Import controllers
-const { signup, login, getStudentData } = require("../controllers/StudentAuth");
+const { signup, login, getAlumniData } = require("../controllers/AlumniAuth");
 
 // Import middleware
 const { auth } = require("../middlewares/auth");
 
 // ********************************************************************************************************
-//                                      Authentication routes
+//                                      Alumni Authentication routes
 // ********************************************************************************************************
 
-// Route for user signup
+// Route for alumni signup
 router.post("/signup", signup);
 
-// Route for user login
+// Route for alumni login
 router.post("/login", login);
+
 
 module.exports = router;
