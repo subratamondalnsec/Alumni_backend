@@ -40,6 +40,7 @@ app.use(
 
 // Setting up routes
 const authRoutes = require("./routes/StudentAuthRoutes");
+const profileRoutes = require("./routes/StudentProfileRoutes");
 
 // Health check endpoint
 app.get("/", (req, res) => {
@@ -52,6 +53,7 @@ app.get("/", (req, res) => {
 
 // Mount routes
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/student", profileRoutes);
 
 
 

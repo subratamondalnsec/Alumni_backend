@@ -20,23 +20,6 @@ function validateEmail(email, res) {
     return true;
 }
 
-// Helper function to calculate profile completeness
-function calculateProfileCompleteness(student) {
-    let score = 0;
-    const fields = [
-        { field: student.firstName, weight: 15 },
-        { field: student.lastName, weight: 15 },
-        { field: student.email, weight: 15 },
-        { field: student.image, weight: 10 },
-        { field: student.college, weight: 45 },
-    ];
-
-    fields.forEach(({ field, weight }) => {
-        if (field) score += weight;
-    });
-
-    return score;
-}
 
 exports.signup = async (req, res) => {
   try {
@@ -177,43 +160,5 @@ exports.login = async (req, res) => {
       success: false,
       message: `Login Failure Please Try Again`,
     })
-  }
-}
-
-// Get Student Data Controller
-exports.getStudentData = async (req, res) => {
-  try {
-    // Get student ID from authenticated user (set by auth middleware)
-    const studentId = req.user.id;
-
-    // Find student by ID and exclude password, populate college
-    const student = await Student.findById(studentId)
-      .select("-password")
-      .populate('college', 'name matchingName');
-
-    // If student not found
-    if (!student) {
-      return res.status(404).json({
-        success: false,
-        message: "Student not found",
-      });
-    }
-
-    // Return student data with profile completeness
-    return res.status(200).json({
-      success: true,
-      data: {
-        ...student.toObject(),
-        profileCompleteness: student.profileCompleteness || 0,
-      },
-      message: "Student data fetched successfully",
-    });
-
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch student data. Please try again.",
-    });
   }
 }

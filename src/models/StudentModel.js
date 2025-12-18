@@ -40,6 +40,48 @@ const studentSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: "College",
     },
+    branch: {
+      type: String,
+      trim: true,
+    },
+    graduationYear: {
+      type: Number,
+    },
+    skills: [{
+      type: String,
+      trim: true,
+    }],
+    projects: [{
+      title: {
+        type: String,
+        trim: true,
+      },
+      description: {
+        type: String,
+        trim: true,
+      },
+      link: {
+        type: String,
+        trim: true,
+      },
+    }],
+    certifications: [{
+      name: {
+        type: String,
+        trim: true,
+      },
+      issuer: {
+        type: String,
+        trim: true,
+      },
+      date: {
+        type: Date,
+      },
+    }],
+    preferredRoles: [{
+      type: String,
+      trim: true,
+    }],
     profileCompleteness: {
       type: Number,
       default: 0,
