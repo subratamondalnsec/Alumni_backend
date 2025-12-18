@@ -82,6 +82,17 @@ const studentSchema = new mongoose.Schema({
       type: String,
       trim: true,
     }],
+    resume: {
+      url: {
+        type: String,
+      },
+      public_id: {
+        type: String,
+      },
+      uploadedAt: {
+        type: Date,
+      },
+    },
     profileCompleteness: {
       type: Number,
       default: 0,
