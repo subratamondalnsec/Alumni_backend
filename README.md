@@ -71,28 +71,56 @@ Content-Type: application/json
 ```
 
 
-## Project Structure
+
+## 📁 Project Structure
 
 ```
 Alumni-backend/
 ├── src/
 │   ├── config/
-│   │   ├── cloudinary.js      # Cloudinary configuration
-│   │   └── database.js        # MongoDB connection
+│   │   ├── cloudinary.js          ✅ Cloudinary setup
+│   │   └── database.js            ✅ MongoDB connection
+│   │
 │   ├── controllers/
-│   │   └── Auth.js            # Authentication controllers
+│   │   ├── StudentAuth.js         ✅ Student signup/login (FIXED)
+│   │   ├── StudentProfile.js      ✅ Student profile management
+│   │   ├── StudentResume.js       ✅ Resume upload/update
+│   │   ├── AlumniAuth.js          ✅ Alumni signup/login
+│   │   ├── AlumniProfile.js       ✅ Alumni profile management
+│   │   ├── OpportunityController.js   ✅ Referral opportunities CRUD
+│   │   └── ApplicationController.js   ✅ Application review & shortlisting
+│   │
 │   ├── middlewares/
-│   │   └── auth.js            # JWT verification middleware
+│   │   └── auth.js                ✅ JWT authentication
+│   │
 │   ├── models/
-│   │   └── StudentModel.js    # Student schema
+│   │   ├── StudentModel.js        ✅ Student schema with all fields
+│   │   ├── AlumniModel.js         ✅ Alumni schema with all fields
+│   │   ├── CollegeModel.js        ✅ College schema (FIXED typo)
+│   │   ├── OpportunityModel.js    ✅ Job opportunity schema
+│   │   └── ApplicationModel.js    ✅ Application schema
+│   │
 │   ├── routes/
-│   │   └── auth.js            # Authentication routes
+│   │   ├── StudentAuthRoutes.js   ✅ Student auth endpoints
+│   │   ├── StudentProfileRoutes.js    ✅ Student profile endpoints
+│   │   ├── StudentResumeRoutes.js     ✅ Resume endpoints
+│   │   ├── AlumniAuthRoutes.js    ✅ Alumni auth endpoints
+│   │   ├── AlumniProfileRoutes.js     ✅ Alumni profile endpoints
+│   │   ├── OpportunityRoutes.js   ✅ Opportunity endpoints
+│   │   └── ApplicationRoutes.js   ✅ Application endpoints
+│   │
 │   ├── utils/
-│   │   ├── imageUploader.js   # Cloudinary upload utility
-│   │   └── tokenGenerator.js  # JWT token utilities
-│   └── index.js               # Application entry point
-├── .env.example               # Environment variables template
-├── .gitignore                 # Git ignore rules
-└── package.json               # Project dependencies
+│   │   ├── imageUploader.js       ✅ Cloudinary upload utility
+│   │   └── tokenGenerator.js      ✅ JWT token generation
+│   │
+│   └── index.js                   ✅ Main server file
+│
+├── .env.example                   ✅ Environment template
+├── .gitignore                     ✅ Git ignore rules
+├── package.json                   ✅ Dependencies
+├── README.md                      ✅ Documentation
+└── POSTMAN_TESTING_GUIDE.md       ✅ API testing guide (NEW)
 ```
+
+---
 

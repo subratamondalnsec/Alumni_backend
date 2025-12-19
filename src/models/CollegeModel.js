@@ -9,7 +9,7 @@ const collegeSchema = new mongoose.Schema({
         required: true,     
         trim: true,
     },
-    matchineName: {
+    matchingName: {
         type: String,
         unique: true,
         required: true,     

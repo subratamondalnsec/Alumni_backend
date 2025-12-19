@@ -81,7 +81,8 @@ exports.viewStudentProfile = async (req, res) => {
         const student = await Student.findById(studentId)
             .select("-password")
             .populate('college', 'name matchingName');
-
+        // console.log(student);
+        // console.log("new ");
         if (!student) {
             return res.status(404).json({
                 success: false,
@@ -91,9 +92,9 @@ exports.viewStudentProfile = async (req, res) => {
 
         // Verify that there's at least one application from this student to any opportunity posted by this alumni
         
-        const alumni = await Alumni.findById(alumniId);
-        
-        if (!alumni || !alumni.college) {
+        const alumni = await Alumni.findById(alumniId).populate('college', 'name matchingName');
+        // console.log(alumni);
+        if (!alumni || !alumni.college._id) {
             return res.status(400).json({
                 success: false,
                 message: "Alumni college information not found",
@@ -101,7 +102,7 @@ exports.viewStudentProfile = async (req, res) => {
         }
 
         // Check if student is from the same college
-        if (student.college.toString() !== alumni.college.toString()) {
+        if (student.college.matchingName !== alumni.college.matchingName) {
             return res.status(403).json({
                 success: false,
                 message: "You can only view profiles of students from your college",

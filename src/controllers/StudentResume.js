@@ -83,7 +83,8 @@ exports.uploadResume = async (req, res) => {
         // Upload to Cloudinary
         const uploadedResume = await uploadImageToCloudinary(
             resumeFile,
-            "job-portal-resumes"
+            "job-portal-resumes",
+            "raw"
         );
 
         // Update student with resume details
@@ -174,7 +175,8 @@ exports.updateResume = async (req, res) => {
         // Upload new resume to Cloudinary
         const uploadedResume = await uploadImageToCloudinary(
             resumeFile,
-            "job-portal-resumes"
+            "job-portal-resumes",
+            "raw"
         );
 
         // Update student with new resume details
