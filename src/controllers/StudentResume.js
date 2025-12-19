@@ -1,5 +1,5 @@
 const Student = require("../models/StudentModel");
-const { uploadImageToCloudinary } = require("../utils/imageUploader");
+const { uploadPdfToCloudinary } = require("../utils/imageUploader");
 const cloudinary = require("cloudinary").v2;
 
 // Helper function to calculate profile completeness
@@ -81,7 +81,7 @@ exports.uploadResume = async (req, res) => {
         }
 
         // Upload to Cloudinary
-        const uploadedResume = await uploadImageToCloudinary(
+        const uploadedResume = await uploadPdfToCloudinary(
             resumeFile,
             "job-portal-resumes",
             "raw"
@@ -173,7 +173,7 @@ exports.updateResume = async (req, res) => {
         }
 
         // Upload new resume to Cloudinary
-        const uploadedResume = await uploadImageToCloudinary(
+        const uploadedResume = await uploadPdfToCloudinary(
             resumeFile,
             "job-portal-resumes",
             "raw"

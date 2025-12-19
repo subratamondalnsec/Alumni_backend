@@ -8,13 +8,16 @@ const {
     shortlistStudent,
     markAsReferred,
     rejectApplication,
+    applyForReferral,
+    getMyApplications,
+    getApplicationDetails,
 } = require("../controllers/ApplicationController");
 
 // Import middleware
 const { auth } = require("../middlewares/auth");
 
 // ********************************************************************************************************
-//                                      Application Review routes
+//                                      Application Review routes (Alumni)
 // ********************************************************************************************************
 
 // All routes require authentication
@@ -34,5 +37,18 @@ router.post("/applications/:applicationId/refer", markAsReferred);
 
 // Reject Application (Alumni only - owner)
 router.post("/applications/:applicationId/reject", rejectApplication);
+
+// ********************************************************************************************************
+//                                      Student Referral Application routes
+// ********************************************************************************************************
+
+// 5.1 Apply for Referral (Student only)
+router.post("/apply", applyForReferral);
+
+// 5.2 Application Status List - Get all my applications (Student only)
+router.get("/my-applications", getMyApplications);
+
+// 5.3 Application Details (Student only)
+router.get("/my-applications/:applicationId", getApplicationDetails);
 
 module.exports = router;

@@ -295,3 +295,294 @@ exports.rejectApplication = async (req, res) => {
         });
     }
 };
+
+
+// =====================================================
+// STUDENT SIDE - Referral Application Endpoints
+// =====================================================
+
+// 5.1 Apply for Referral
+exports.applyForReferral = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { opportunityId } = req.body;
+
+        // Validate input
+        if (!opportunityId) {
+            return res.status(400).json({
+                success: false,
+                message: "Opportunity ID is required",
+            });
+        }
+
+        // Find the student with college info
+        const student = await Student.findById(studentId)
+            .populate('college', 'name matchingName');
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found",
+            });
+        }
+
+        // Check if resume is uploaded
+        if (!student.resume || !student.resume.url) {
+            return res.status(400).json({
+                success: false,
+                message: "Please upload your resume before applying for referrals",
+            });
+        }
+
+        // Find the opportunity with alumni and college info
+        const opportunity = await Opportunity.findById(opportunityId)
+            .populate({
+                path: 'postedBy',
+                select: 'firstName lastName email company currentRole college',
+                populate: {
+                    path: 'college',
+                    select: 'name matchingName'
+                }
+            })
+            .populate('college', 'name matchingName');
+
+        if (!opportunity) {
+            return res.status(404).json({
+                success: false,
+                message: "Opportunity not found",
+            });
+        }
+
+        // Check if opportunity is still open
+        if (opportunity.status !== "Open") {
+            return res.status(400).json({
+                success: false,
+                message: "This opportunity is no longer accepting applications",
+            });
+        }
+
+        // Check college match
+        if (!student.college || !opportunity.college) {
+            return res.status(400).json({
+                success: false,
+                message: "College information is missing. Please update your profile.",
+            });
+        }
+
+        if (student.college.matchingName !== opportunity.college.matchingName) {
+            return res.status(403).json({
+                success: false,
+                message: "You can only apply for referrals from alumni of your college",
+            });
+        }
+
+        // Check if already applied
+        const existingApplication = await Application.findOne({
+            opportunity: opportunityId,
+            student: studentId,
+        });
+
+        if (existingApplication) {
+            return res.status(400).json({
+                success: false,
+                message: "You have already applied for this opportunity",
+            });
+        }
+
+        // Create profile snapshot
+        const profileSnapshot = {
+            firstName: student.firstName,
+            lastName: student.lastName,
+            email: student.email,
+            branch: student.branch,
+            graduationYear: student.graduationYear,
+            skills: student.skills || [],
+            profileCompleteness: student.profileCompleteness,
+        };
+
+        // Create resume snapshot
+        const resumeSnapshot = {
+            url: student.resume.url,
+            public_id: student.resume.public_id,
+            uploadedAt: student.resume.uploadedAt,
+        };
+
+        // Create application
+        const application = await Application.create({
+            opportunity: opportunityId,
+            student: studentId,
+            alumni: opportunity.postedBy._id,
+            status: "Applied",
+            profileSnapshot,
+            resumeSnapshot,
+            appliedAt: new Date(),
+            statusHistory: [{
+                status: "Applied",
+                timestamp: new Date(),
+                note: "Application submitted",
+            }],
+        });
+
+        // Populate the created application for response
+        const populatedApplication = await Application.findById(application._id)
+            .populate('opportunity', 'jobTitle roleDescription experienceLevel requiredSkills')
+            .populate('alumni', 'firstName lastName company currentRole');
+
+        return res.status(201).json({
+            success: true,
+            data: {
+                application: populatedApplication,
+                message: "Your application has been submitted successfully",
+            },
+            message: "Applied for referral successfully",
+        });
+
+    } catch (error) {
+        console.error("Apply for referral error:", error);
+        
+        // Handle duplicate key error
+        if (error.code === 11000) {
+            return res.status(400).json({
+                success: false,
+                message: "You have already applied for this opportunity",
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to apply for referral. Please try again.",
+        });
+    }
+};
+
+// 5.2 Application Status List - Get all applications for a student
+exports.getMyApplications = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { status, page = 1, limit = 10 } = req.query;
+
+        // Build filter query
+        const filter = { student: studentId };
+        if (status && ["Applied", "Shortlisted", "Referred", "Rejected"].includes(status)) {
+            filter.status = status;
+        }
+
+        // Get total count
+        const totalCount = await Application.countDocuments(filter);
+
+        // Find applications with pagination
+        const applications = await Application.find(filter)
+            .populate('opportunity', 'jobTitle roleDescription experienceLevel requiredSkills status')
+            .populate('alumni', 'firstName lastName email company currentRole image')
+            .sort({ appliedAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(parseInt(limit));
+
+        // Group by status for summary
+        const allApplications = await Application.find({ student: studentId });
+        const statusSummary = {
+            applied: allApplications.filter(app => app.status === "Applied").length,
+            shortlisted: allApplications.filter(app => app.status === "Shortlisted").length,
+            referred: allApplications.filter(app => app.status === "Referred").length,
+            rejected: allApplications.filter(app => app.status === "Rejected").length,
+        };
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                applications,
+                statusSummary,
+                pagination: {
+                    currentPage: parseInt(page),
+                    totalPages: Math.ceil(totalCount / limit),
+                    totalApplications: totalCount,
+                    hasNextPage: page * limit < totalCount,
+                    hasPrevPage: page > 1,
+                },
+            },
+            message: "Applications fetched successfully",
+        });
+
+    } catch (error) {
+        console.error("Get my applications error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch applications. Please try again.",
+        });
+    }
+};
+
+// 5.3 Application Details - Get specific application details
+exports.getApplicationDetails = async (req, res) => {
+    try {
+        const studentId = req.user.id;
+        const { applicationId } = req.params;
+
+        // Find application
+        const application = await Application.findById(applicationId)
+            .populate('opportunity', 'jobTitle roleDescription experienceLevel requiredSkills status numberOfReferrals createdAt')
+            .populate('alumni', 'firstName lastName email company currentRole image linkedIn')
+            .populate('student', 'firstName lastName');
+
+        if (!application) {
+            return res.status(404).json({
+                success: false,
+                message: "Application not found",
+            });
+        }
+
+        // Verify the student owns this application
+        if (application.student._id.toString() !== studentId) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not authorized to view this application",
+            });
+        }
+
+        // Build detailed response
+        const applicationDetails = {
+            _id: application._id,
+            status: application.status,
+            appliedAt: application.appliedAt,
+            shortlistedAt: application.shortlistedAt,
+            referredAt: application.referredAt,
+            rejectedAt: application.rejectedAt,
+            opportunity: {
+                _id: application.opportunity._id,
+                jobTitle: application.opportunity.jobTitle,
+                roleDescription: application.opportunity.roleDescription,
+                experienceLevel: application.opportunity.experienceLevel,
+                requiredSkills: application.opportunity.requiredSkills,
+                status: application.opportunity.status,
+                postedAt: application.opportunity.createdAt,
+            },
+            alumni: {
+                _id: application.alumni._id,
+                name: `${application.alumni.firstName} ${application.alumni.lastName}`,
+                company: application.alumni.company,
+                currentRole: application.alumni.currentRole,
+                image: application.alumni.image,
+                linkedIn: application.alumni.linkedIn,
+            },
+            // Show the snapshot used during application
+            resumeSnapshot: application.resumeSnapshot,
+            profileSnapshot: application.profileSnapshot,
+            statusHistory: application.statusHistory || [],
+            createdAt: application.createdAt,
+            updatedAt: application.updatedAt,
+        };
+
+        return res.status(200).json({
+            success: true,
+            data: applicationDetails,
+            message: "Application details fetched successfully",
+        });
+
+    } catch (error) {
+        console.error("Get application details error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch application details. Please try again.",
+        });
+    }
+};
